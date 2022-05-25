@@ -29,12 +29,15 @@ def generate_class_synthesis(semantic_mask, radius):
     buckets = dict()
     kernel = np.ones((5, 5), np.uint8)
     semantic_mask = cv.erode(semantic_mask, kernel, iterations=1)
+    goodClassNames=[]
     for k, class_name in enumerate(SoccerPitch.lines_classes):
         mask = semantic_mask == k + 1
         if mask.sum() > 0:
             disk_list = synthesize_mask(mask, radius)
             if len(disk_list):
                 buckets[class_name] = disk_list
+            goodClassNames.append(class_name)
+    print(f"We included {goodClassNames}")
 
     return buckets
 

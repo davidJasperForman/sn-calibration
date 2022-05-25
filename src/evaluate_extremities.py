@@ -34,7 +34,7 @@ def mirror_labels(lines_dict):
     return mirrored_dict
 
 
-def evaluate_detection_prediction(groundtruth_lines, detected_lines, threshold=2.):
+def evaluate_detection_prediction(detected_lines, groundtruth_lines, threshold=2.):
     """
     Evaluates the prediction of extremities. The extremities associated to a class are unordered. The extremities of the
     "Circle central" element is not well-defined for this task, thus this class is ignored.
@@ -44,7 +44,7 @@ def evaluate_detection_prediction(groundtruth_lines, detected_lines, threshold=2
     Computes also the euclidian distance between each predicted extremity and its closest groundtruth extremity, when
     both the groundtruth and the prediction contain the element class.
 
-    :param projected_lines: dictionary of detected lines classes as keys and associated predicted extremities as values
+    :param detected_lines: dictionary of detected lines classes as keys and associated predicted extremities as values
     :param groundtruth_lines: dictionary of annotated lines classes as keys and associated annotated points as values
     :param threshold: distance in pixels that distinguishes good matches from bad ones
     :return: confusion matrix, per class confusion matrix & per class localization errors
@@ -54,6 +54,11 @@ def evaluate_detection_prediction(groundtruth_lines, detected_lines, threshold=2
     errors_dict = {}
     detected_classes = set(detected_lines.keys())
     groundtruth_classes = set(groundtruth_lines.keys())
+
+    if "Circle central" in groundtruth_classes:
+        groundtruth_classes.remove("Circle central")
+    if "Circle central" in detected_classes:
+        detected_classes.remove("Circle central")
 
     false_positives_classes = detected_classes - groundtruth_classes
     for false_positive_class in false_positives_classes:
@@ -70,8 +75,6 @@ def evaluate_detection_prediction(groundtruth_lines, detected_lines, threshold=2
     common_classes = detected_classes - false_positives_classes
 
     for detected_class in common_classes:
-        if detected_class == "Circle center":
-            continue
         detected_points = detected_lines[detected_class]
 
         groundtruth_points = groundtruth_lines[detected_class]
@@ -124,12 +127,11 @@ def scale_points(points_dict, s_width, s_height):
     for line_class, points in points_dict.items():
         scaled_points = []
         for point in points:
-            new_point = {'x': point['x'] * s_width, 'y': point['y'] * s_height}
+            new_point = {'x': point['x'] * (s_width - 1), 'y': point['y'] * (s_height - 1)}
             scaled_points.append(new_point)
         if len(scaled_points):
             line_dict[line_class] = scaled_points
-    if len(line_dict):
-        return line_dict
+    return line_dict
 
 
 if __name__ == "__main__":
